@@ -1,6 +1,11 @@
 
 # Created by https://www.gitignore.io/api/git,macos,linux,python,gitbook,pycharm+all,jupyternotebook,visualstudiocode
 
+### Folders ###
+exercises
+jupyter-env
+ml-exercises
+
 ### Git ###
 # Created by git for backups. To disable backups in Git:
 # $ git config --global mergetool.keepBackup false
