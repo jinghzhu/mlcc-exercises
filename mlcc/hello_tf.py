@@ -12,26 +12,22 @@ from sklearn import metrics
 import tensorflow as tf
 from tensorflow.python.data import Dataset
 
+
+"""
+Step 1: Setup
+"""
 tf.logging.set_verbosity(tf.logging.ERROR)
 pd.options.display.max_rows = 10
 pd.options.display.float_format = '{:.1f}'.format
-
-"""
-Load data set.
-"""
 
 california_housing_dataframe = pd.read_csv(
     "https://download.mlcc.google.com/mledu-datasets/california_housing_train.csv",
     sep=","
 )
 
-
-"""
-Randomize the data, just to be sure not to get any pathological ordering effects that might harm the performance of
-Stochastic Gradient Descent. Additionally, we'll scale `median_house_value` to be in units of thousands, so it can be
-learned a little more easily with learning rates in a range that we usually use.
-"""
-
+# Randomize the data, to be sure not to get any pathological ordering effects that might harm the performance of
+# Stochastic Gradient Descent. Additionally, we'll scale `median_house_value` to be in units of thousands, so it can be
+# learned a little more easily with learning rates in a range that we usually use.
 california_housing_dataframe = california_housing_dataframe.reindex(
     np.random.permutation(california_housing_dataframe.index))
 california_housing_dataframe["median_house_value"] /= 1000.0
@@ -39,20 +35,21 @@ california_housing_dataframe
 
 
 """
-Print out statistics on each column: count of examples, mean, standard deviation, max, min, and various quantiles.
+Step 2: Examine Data
 """
-
+# Print out statistics on each column: count of examples, mean, standard deviation, max, min, and various quantiles.
 california_housing_dataframe.describe()
 
-"""
-Build First Model
-"""
 
+"""
+Step 3: Build First Model
+"""
 # Predict `median_house_value`, which will be label. Use `total_rooms` as our input feature.
 # To train model, use Linear Regressor interface provided by TensorFlow Estimator API.
 
-# Step 1: Define Features and Configure Feature Columns
-
+"""
+Step 3.1: Define Features and Configure Feature Columns
+"""
 # In order to import training data into TensorFlow, need to specify what type of data each feature contains.
 # There are two main types of data we'll use:
 # 1. Categorical Data: Data that is textual. Housing data set does not contain any categorical features, but examples
@@ -72,15 +69,17 @@ my_feature = california_housing_dataframe[["total_rooms"]]
 # Configure a numeric feature column for total_rooms.
 feature_columns = [tf.feature_column.numeric_column("total_rooms")]
 
-# Step 2: Define the Target
-
+"""
+Step 3.2: Define the Target
+"""
 # Next, we'll define our target, which is `median_house_value`.
 
 # Define the label.
 targets = california_housing_dataframe["median_house_value"]
 
-# Step 3: Configure the Linear Regressor
-
+"""
+Step 3.3: Configure the Linear Regressor
+"""
 # Next, configure a linear regression model using Linear Regressor. Train this model using `GradientDescentOptimizer`,
 # which implements Mini-Batch Stochastic Gradient Descent (SGD). `learning_rate` controls the size of gradient step.
 
@@ -95,8 +94,9 @@ linear_regressor = tf.estimator.LinearRegressor(
     optimizer=my_optimizer
 )
 
-# Step 4: Define the Input Function
-
+"""
+Step 3.4: Define the Input Function
+"""
 # To import California housing data into Linear Regressor, need to define input function, which instructs TensorFlow
 # how to preprocess data, as well as how to batch, shuffle, and repeat it during model training.
 
@@ -140,20 +140,20 @@ def my_input_fn(features, targets, batch_size=1, shuffle=True, num_epochs=None):
     features, labels = ds.make_one_shot_iterator().get_next()
     return features, labels
 
-# Step 5: Train the Model
 
+"""
+Step 3.5: Train Model
+"""
 # Now call `train()` on `linear_regressor` to train the model. Wrap `my_input_fn` in a `lambda so we can pass in
 # `my_feature` and `target` as arguments, and to start, we'll train for 100 steps.
-
-
 _ = linear_regressor.train(
     input_fn=lambda: my_input_fn(my_feature, targets),
     steps=100
 )
 
-
-# Step 6: Evaluate the Model
-
+"""
+Step 3.6: Evaluate Model
+"""
 # Create an input function for predictions.
 prediction_input_fn = lambda: my_input_fn(my_feature, targets, num_epochs=1, shuffle=False)
 
@@ -179,13 +179,13 @@ print("Max. Median House Value: %0.3f" % max_house_value)
 print("Difference between Min. and Max.: %0.3f" % min_max_difference)
 print("Root Mean Squared Error: %0.3f" % root_mean_squared_error)
 
-# Now, trying to improve the result.
+# Now to improve result.
 calibration_data = pd.DataFrame()
 calibration_data["predictions"] = pd.Series(predictions)
 calibration_data["targets"] = pd.Series(targets)
 calibration_data.describe()
 
-# We can also visualize data and the line we've learned. Recall linear regression on a single feature can be drawn as
+# Can also visualize data and the line we've learned. Recall linear regression on a single feature can be drawn as
 # a line mapping input x to output y.
 
 # First, get a uniform random sample of the data so we can make a readable scatter plot.
@@ -221,113 +221,109 @@ plt.show()
 
 
 """
-Tweak the Model Hyperparameters
+Step 4: Tweak the Model Hyperparameters
 """
+
 
 # In this function, we'll proceed in 10 evenly divided periods so that we can observe the model improvement at each
 # period. For each period, we'll compute and graph training loss. This may help you judge when a model is converged,
 # or if it needs more iterations. Also plot the feature weight and bias term values learned by the model over time.
-
-
 def train_model(learning_rate, steps, batch_size, input_feature="total_rooms"):
-  """Trains a linear regression model of one feature.
+    """Trains a linear regression model of one feature.
   
-  Args:
-    learning_rate: A `float`, the learning rate.
-    steps: A non-zero `int`, the total number of training steps. A training step
-      consists of a forward and backward pass using a single batch.
-    batch_size: A non-zero `int`, the batch size.
-    input_feature: A `string` specifying a column from `california_housing_dataframe`
-      to use as input feature.
-  """
+    Args:
+        learning_rate: A `float`, the learning rate.
+        steps: A non-zero `int`, the total number of training steps. A training step consists of a forward and backward
+        pass using a single batch.
+        batch_size: A non-zero `int`, the batch size.
+        input_feature: A `string` specifying a column from `california_housing_dataframe`
+        to use as input feature.
+    """
   
-  periods = 10
-  steps_per_period = steps / periods
+    periods = 10
+    steps_per_period = steps / periods
 
-  my_feature = input_feature
-  my_feature_data = california_housing_dataframe[[my_feature]]
-  my_label = "median_house_value"
-  targets = california_housing_dataframe[my_label]
+    my_feature = input_feature
+    my_feature_data = california_housing_dataframe[[my_feature]]
+    my_label = "median_house_value"
+    targets = california_housing_dataframe[my_label]
 
-  # Create feature columns.
-  feature_columns = [tf.feature_column.numeric_column(my_feature)]
+    # Create feature columns.
+    feature_columns = [tf.feature_column.numeric_column(my_feature)]
   
-  # Create input functions.
-  training_input_fn = lambda:my_input_fn(my_feature_data, targets, batch_size=batch_size)
-  prediction_input_fn = lambda: my_input_fn(my_feature_data, targets, num_epochs=1, shuffle=False)
+    # Create input functions.
+    training_input_fn = lambda:my_input_fn(my_feature_data, targets, batch_size=batch_size)
+    prediction_input_fn = lambda: my_input_fn(my_feature_data, targets, num_epochs=1, shuffle=False)
   
-  # Create a linear regressor object.
-  my_optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
-  my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(my_optimizer, 5.0)
-  linear_regressor = tf.estimator.LinearRegressor(
-      feature_columns=feature_columns,
-      optimizer=my_optimizer
-  )
-
-  # Set up to plot the state of our model's line each period.
-  plt.figure(figsize=(15, 6))
-  plt.subplot(1, 2, 1)
-  plt.title("Learned Line by Period")
-  plt.ylabel(my_label)
-  plt.xlabel(my_feature)
-  sample = california_housing_dataframe.sample(n=300)
-  plt.scatter(sample[my_feature], sample[my_label])
-  colors = [cm.coolwarm(x) for x in np.linspace(-1, 1, periods)]
-
-  # Train the model, but do so inside a loop so that we can periodically assess
-  # loss metrics.
-  print("Training model...")
-  print("RMSE (on training data):")
-  root_mean_squared_errors = []
-  for period in range (0, periods):
-    # Train the model, starting from the prior state.
-    linear_regressor.train(
-        input_fn=training_input_fn,
-        steps=steps_per_period
+    # Create a linear regressor object.
+    my_optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+    my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(my_optimizer, 5.0)
+    linear_regressor = tf.estimator.LinearRegressor(
+        feature_columns=feature_columns,
+        optimizer=my_optimizer
     )
-    # Take a break and compute predictions.
-    predictions = linear_regressor.predict(input_fn=prediction_input_fn)
-    predictions = np.array([item['predictions'][0] for item in predictions])
+
+    # Set up to plot the state of our model's line each period.
+    plt.figure(figsize=(15, 6))
+    plt.subplot(1, 2, 1)
+    plt.title("Learned Line by Period")
+    plt.ylabel(my_label)
+    plt.xlabel(my_feature)
+    sample = california_housing_dataframe.sample(n=300)
+    plt.scatter(sample[my_feature], sample[my_label])
+    colors = [cm.coolwarm(x) for x in np.linspace(-1, 1, periods)]
+
+    # Train model, but do so inside a loop so that we can periodically assess loss metrics.
+    print("Training model...")
+    print("RMSE (on training data):")
+    root_mean_squared_errors = []
+    for period in range (0, periods):
+        # Train the model, starting from the prior state.
+        linear_regressor.train(
+            input_fn=training_input_fn,
+            steps=steps_per_period
+        )
+        # Take a break and compute predictions.
+        predictions = linear_regressor.predict(input_fn=prediction_input_fn)
+        predictions = np.array([item['predictions'][0] for item in predictions])
     
-    # Compute loss.
-    root_mean_squared_error = math.sqrt(
-        metrics.mean_squared_error(predictions, targets))
-    # Occasionally print the current loss.
-    print("  period %02d : %0.2f" % (period, root_mean_squared_error))
-    # Add the loss metrics from this period to our list.
-    root_mean_squared_errors.append(root_mean_squared_error)
-    # Finally, track the weights and biases over time.
-    # Apply some math to ensure that the data and line are plotted neatly.
-    y_extents = np.array([0, sample[my_label].max()])
+        # Compute loss.
+        root_mean_squared_error = math.sqrt(metrics.mean_squared_error(predictions, targets))
+        # Occasionally print the current loss.
+        print("  period %02d : %0.2f" % (period, root_mean_squared_error))
+        # Add the loss metrics from this period to our list.
+        root_mean_squared_errors.append(root_mean_squared_error)
+        # Finally, track the weights and biases over time.
+        # Apply some math to ensure that the data and line are plotted neatly.
+        y_extents = np.array([0, sample[my_label].max()])
     
-    weight = linear_regressor.get_variable_value('linear/linear_model/%s/weights' % input_feature)[0]
-    bias = linear_regressor.get_variable_value('linear/linear_model/bias_weights')
+        weight = linear_regressor.get_variable_value('linear/linear_model/%s/weights' % input_feature)[0]
+        bias = linear_regressor.get_variable_value('linear/linear_model/bias_weights')
 
-    x_extents = (y_extents - bias) / weight
-    x_extents = np.maximum(np.minimum(x_extents,
-                                      sample[my_feature].max()),
-                           sample[my_feature].min())
-    y_extents = weight * x_extents + bias
-    plt.plot(x_extents, y_extents, color=colors[period]) 
-  print("Model training finished.")
+        x_extents = (y_extents - bias) / weight
+        x_extents = np.maximum(np.minimum(x_extents, sample[my_feature].max()), sample[my_feature].min())
+        y_extents = weight * x_extents + bias
+        plt.plot(x_extents, y_extents, color=colors[period])
+    print("Model training finished.")
 
-  # Output a graph of loss metrics over periods.
-  plt.subplot(1, 2, 2)
-  plt.ylabel('RMSE')
-  plt.xlabel('Periods')
-  plt.title("Root Mean Squared Error vs. Periods")
-  plt.tight_layout()
-  plt.plot(root_mean_squared_errors)
+    # Output a graph of loss metrics over periods.
+    plt.subplot(1, 2, 2)
+    plt.ylabel('RMSE')
+    plt.xlabel('Periods')
+    plt.title("Root Mean Squared Error vs. Periods")
+    plt.tight_layout()
+    plt.plot(root_mean_squared_errors)
 
-  # Output a table with calibration data.
-  calibration_data = pd.DataFrame()
-  calibration_data["predictions"] = pd.Series(predictions)
-  calibration_data["targets"] = pd.Series(targets)
-  display.display(calibration_data.describe())
+    # Output a table with calibration data.
+    calibration_data = pd.DataFrame()
+    calibration_data["predictions"] = pd.Series(predictions)
+    calibration_data["targets"] = pd.Series(targets)
+    display.display(calibration_data.describe())
 
-  print("Final RMSE (on training data): %0.2f" % root_mean_squared_error)
+    print("Final RMSE (on training data): %0.2f" % root_mean_squared_error)
 
 
+# Achieve an RMSE of 180 or Below.
 train_model(
     learning_rate=0.00001,
     steps=100,
@@ -340,6 +336,7 @@ train_model(
     batch_size=5
 )
 
+# Try a Different Feature.
 train_model(
     learning_rate=0.00002,
     steps=1000,
