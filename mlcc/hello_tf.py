@@ -1,3 +1,7 @@
+# 1. Use Linear Regressor class in TensorFlow to predict median housing price, at the granularity of city blocks,
+#   based on one input feature.
+# 2. Evaluate the accuracy of a model's predictions using Root Mean Squared Error (RMSE).
+# 3. Improve the accuracy of a model by tuning its hyperparameters.
 from __future__ import print_function
 
 import math

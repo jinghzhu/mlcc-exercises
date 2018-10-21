@@ -1,3 +1,6 @@
+# 1. Use multiple features, instead of a single feature, to further improve the effectiveness of a model.
+# 2. Debug issues in model input data.
+# 3. Use a test data set to check if a model is overfitting the validation data.
 from __future__ import print_function
 
 import math
