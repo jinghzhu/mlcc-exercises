@@ -13,7 +13,7 @@ from tensorflow.python.data import Dataset
 
 
 """
-Step 1: Set Up
+Step 1: Setup
 """
 tf.logging.set_verbosity(tf.logging.ERROR)
 pd.options.display.max_rows = 10
@@ -26,8 +26,7 @@ def preprocess_features(california_housing_dataframe):
     """Prepares input features from California housing data set.
 
     Args:
-        california_housing_dataframe: A Pandas DataFrame expected to contain data
-        from the California housing data set.
+        california_housing_dataframe: A Pandas DataFrame expected to contain data from the California housing data set.
     Returns:
         A DataFrame that contains the features to be used for the model, including
         synthetic features.
@@ -204,7 +203,8 @@ def train_model(
         optimizer=my_optimizer
     )
 
-    # Create input functions.
+    # HERE IS DATA SET PARTITION.
+    # 1. Create input functions.
     training_input_fn = lambda: my_input_fn(
         training_examples,
         training_targets["median_house_value"],
@@ -219,19 +219,17 @@ def train_model(
         num_epochs=1,
         shuffle=False)
 
-    # Train the model, but do so inside a loop so that we can periodically assess
-    # loss metrics.
+    # Train the model, but do so inside a loop so that we can periodically assess loss metrics.
     print("Training model...")
     print("RMSE (on training data):")
     training_rmse = []
     validation_rmse = []
     for period in range(0, periods):
         # Train the model, starting from the prior state.
-        linear_regressor.train(
-            input_fn=training_input_fn,
-            steps=steps_per_period,
-        )
-        # Take a break and compute predictions.
+        linear_regressor.train(input_fn=training_input_fn, steps=steps_per_period,)
+
+        # HERE IS DATA SET PARTITION.
+        # 2. Take a break and compute predictions.
         training_predictions = linear_regressor.predict(input_fn=predict_training_input_fn)
         training_predictions = np.array([item['predictions'][0] for item in training_predictions])
 

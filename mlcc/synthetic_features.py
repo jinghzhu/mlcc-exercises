@@ -67,8 +67,7 @@ def train_model(learning_rate, steps, batch_size, input_feature):
       steps: A non-zero `int`, the total number of training steps. A training step
         consists of a forward and backward pass using a single batch.
       batch_size: A non-zero `int`, the batch size.
-      input_feature: A `string` specifying a column from `california_housing_dataframe`
-        to use as input feature.
+      input_feature: A `string` specifying a column from `california_housing_dataframe` to use as input feature.
 
     Returns:
       A Pandas `DataFrame` containing targets and the corresponding predictions done
@@ -108,8 +107,7 @@ def train_model(learning_rate, steps, batch_size, input_feature):
     plt.scatter(sample[my_feature], sample[my_label])
     colors = [cm.coolwarm(x) for x in np.linspace(-1, 1, periods)]
 
-    # Train the model, but do so inside a loop so that we can periodically assess
-    # loss metrics.
+    # Train the model, but do so inside a loop so that we can periodically assess loss metrics.
     print("Training model...")
     print("RMSE (on training data):")
     root_mean_squared_errors = []
@@ -167,8 +165,7 @@ def train_model(learning_rate, steps, batch_size, input_feature):
 """
 Step 2: Synthetic Feature
 """
-
-
+# HERE IS SYNTHETIC FEATURE.
 # Create a feature called rooms_per_person, and use that as the input_feature to train_model().
 california_housing_dataframe["rooms_per_person"] = (
     california_housing_dataframe["total_rooms"] / california_housing_dataframe["population"])
