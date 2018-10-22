@@ -3,7 +3,6 @@
 # 2. Evaluate the accuracy of a model's predictions using Root Mean Squared Error (RMSE).
 # 3. Improve the accuracy of a model by tuning its hyperparameters.
 from __future__ import print_function
-
 import math
 from IPython import display
 from matplotlib import cm

@@ -2,7 +2,6 @@
 # 2. Use this new feature as an input to a linear regression model.
 # 3. Improve the effectiveness of the model by identifying and clipping (removing) outliers out of the input data
 from __future__ import print_function
-
 import math
 from IPython import display
 from matplotlib import cm

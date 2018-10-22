@@ -4,11 +4,8 @@
 # 3. Use the FTRL optimization algorithm for model training.
 # 4. Create new synthetic features through one-hot encoding, binning, and feature crosses.
 from __future__ import print_function
-
 import math
 from IPython import display
-from matplotlib import cm
-from matplotlib import gridspec
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
